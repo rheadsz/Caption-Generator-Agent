@@ -1,5 +1,5 @@
 from smolagents import CodeAgent, DuckDuckGoSearchTool, load_tool, tool
-import openai
+from smolagents.models import OpenAIModel
 import datetime
 import requests
 import pytz
@@ -214,13 +214,12 @@ final_answer = FinalAnswerTool()
 # If the agent does not answer, the model is overloaded, please use another model or the following Hugging Face Endpoint that also contains qwen2.5 coder:
 # model_id='https://pflgm2locj2t89co.us-east-1.aws.endpoints.huggingface.cloud' 
 
-# Initialize the OpenAI client
-client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
-# Model configuration
-max_tokens = 2096
-temperature = 0.5
-model_id = 'gpt-3.5-turbo'  # it is possible that this model may be overloaded
+model = OpenAIModel(
+max_tokens=2096,
+temperature=0.5,
+model_id='gpt-3.5-turbo', # it is possible that this model may be overloaded
+custom_role_conversions=None,
+)
 
 
 # Import tool from Hub
@@ -229,38 +228,10 @@ image_generation_tool = load_tool("agents-course/text-to-image", trust_remote_co
 with open("prompts.yaml", 'r') as stream:
     prompt_templates = yaml.safe_load(stream)
     
-# Create a more comprehensive wrapper class to make the OpenAI client compatible with CodeAgent
-class OpenAIWrapper:
-    def __init__(self, client, model_id, max_tokens, temperature):
-        self.client = client
-        self.model_id = model_id
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        # Add additional properties that might be expected by CodeAgent
-        self.custom_role_conversions = None
-        
-    def generate(self, prompt):
-        try:
-            print(f"Generating with prompt: {prompt[:100]}...")
-            response = self.client.chat.completions.create(
-                model=self.model_id,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=self.max_tokens,
-                temperature=self.temperature
-            )
-            result = response.choices[0].message.content
-            print(f"Generated response: {result[:100]}...")
-            return result
-        except Exception as e:
-            print(f"Error in OpenAIWrapper.generate: {e}")
-            # Return a fallback response to prevent complete failure
-            return "I apologize, but I encountered an error while generating a response. Please try again."
-
-# Create wrapper for OpenAI client
-model_wrapper = OpenAIWrapper(client, model_id, max_tokens, temperature)
+# Model is defined above
 
 agent = CodeAgent(
-    model=model_wrapper,
+    model=model,
     tools=[final_answer, generate_caption, get_current_time_in_timezone, image_generation_tool], ## add your tools here (don't remove final answer)
     max_steps=6,
     verbosity_level=1,
