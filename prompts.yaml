@@ -319,3 +319,15 @@
   "report": |-
     Here is the final answer from your managed agent '{{name}}':
     {{final_answer}}
+
+"final_answer":
+  "pre_messages": |-
+    You are about to provide a final answer to the task.
+  "prompt": |-
+    You are providing a final answer to the task.
+    
+    Task: {{task}}
+    
+    Your final answer: {{answer}}
+  "post_messages": |-
+    You have provided your final answer to the task.

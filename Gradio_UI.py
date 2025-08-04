@@ -111,9 +111,15 @@ def pull_messages_from_step(
         # Calculate duration and token information
         step_footnote = f"{step_number}"
         if hasattr(step_log, "input_token_count") and hasattr(step_log, "output_token_count"):
+            
+            # Add safety checks for None values in formatting
+            input_count = step_log.input_token_count if step_log.input_token_count is not None else 0
+            output_count = step_log.output_token_count if step_log.output_token_count is not None else 0
             token_str = (
-                f" | Input-tokens:{step_log.input_token_count:,} | Output-tokens:{step_log.output_token_count:,}"
+                f" | Input-tokens:{input_count:,} | Output-tokens:{output_count:,}"
             )
+
+
             step_footnote += token_str
         if hasattr(step_log, "duration"):
             step_duration = f" | Duration: {round(float(step_log.duration), 2)}" if step_log.duration else None
@@ -142,8 +148,12 @@ def stream_to_gradio(
     for step_log in agent.run(task, stream=True, reset=reset_agent_memory, additional_args=additional_args):
         # Track tokens if model provides them
         if hasattr(agent.model, "last_input_token_count"):
-            total_input_tokens += agent.model.last_input_token_count
-            total_output_tokens += agent.model.last_output_token_count
+            # Add safety checks to handle None values
+            if agent.model.last_input_token_count is not None:
+                total_input_tokens += agent.model.last_input_token_count
+            if agent.model.last_output_token_count is not None:
+                total_output_tokens += agent.model.last_output_token_count
+
             if isinstance(step_log, ActionStep):
                 step_log.input_token_count = agent.model.last_input_token_count
                 step_log.output_token_count = agent.model.last_output_token_count
