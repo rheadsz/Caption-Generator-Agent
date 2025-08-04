@@ -229,22 +229,32 @@ image_generation_tool = load_tool("agents-course/text-to-image", trust_remote_co
 with open("prompts.yaml", 'r') as stream:
     prompt_templates = yaml.safe_load(stream)
     
-# Create a simple wrapper class to make the OpenAI client compatible with CodeAgent
+# Create a more comprehensive wrapper class to make the OpenAI client compatible with CodeAgent
 class OpenAIWrapper:
     def __init__(self, client, model_id, max_tokens, temperature):
         self.client = client
         self.model_id = model_id
         self.max_tokens = max_tokens
         self.temperature = temperature
+        # Add additional properties that might be expected by CodeAgent
+        self.custom_role_conversions = None
         
     def generate(self, prompt):
-        response = self.client.chat.completions.create(
-            model=self.model_id,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=self.max_tokens,
-            temperature=self.temperature
-        )
-        return response.choices[0].message.content
+        try:
+            print(f"Generating with prompt: {prompt[:100]}...")
+            response = self.client.chat.completions.create(
+                model=self.model_id,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=self.max_tokens,
+                temperature=self.temperature
+            )
+            result = response.choices[0].message.content
+            print(f"Generated response: {result[:100]}...")
+            return result
+        except Exception as e:
+            print(f"Error in OpenAIWrapper.generate: {e}")
+            # Return a fallback response to prevent complete failure
+            return "I apologize, but I encountered an error while generating a response. Please try again."
 
 # Create wrapper for OpenAI client
 model_wrapper = OpenAIWrapper(client, model_id, max_tokens, temperature)
