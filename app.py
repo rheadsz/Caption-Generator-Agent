@@ -1,5 +1,5 @@
-from smolagents import CodeAgent,DuckDuckGoSearchTool, InferenceClientModel,load_tool,tool
-from smolagents.models import InferenceClientModel, OpenAIModel
+from smolagents import CodeAgent, DuckDuckGoSearchTool, load_tool, tool
+from smolagents.models import OpenAIModel
 import datetime
 import requests
 import pytz
